@@ -44,7 +44,6 @@ function processSell(
     const salePrice = new Decimal(operation['unit-cost']);
     const saleQuantity = operation.quantity;
     const saleValue = salePrice.times(saleQuantity);
-
     const costBasis = portfolio.averagePrice.times(saleQuantity);
 
     portfolio.shares -= saleQuantity;
@@ -62,15 +61,15 @@ function processSell(
       };
     }
 
-    const profit = result;
-
-    let netProfit = profit.minus(portfolio.accumulatedLoss);
-
-    if (profit.greaterThanOrEqualTo(portfolio.accumulatedLoss)) {
-      portfolio.accumulatedLoss = new Decimal(0);
-    } else {
-      portfolio.accumulatedLoss = portfolio.accumulatedLoss.minus(profit);
-      netProfit = new Decimal(0);
+    let netProfit = result;
+    if(portfolio.accumulatedLoss.greaterThan(0)) {
+      if (netProfit.greaterThanOrEqualTo(portfolio.accumulatedLoss)) {
+        netProfit = netProfit.minus(portfolio.accumulatedLoss);
+        portfolio.accumulatedLoss = new Decimal(0);
+      } else {
+        portfolio.accumulatedLoss = portfolio.accumulatedLoss.minus(netProfit);
+        netProfit = new Decimal(0);
+      }
     }
 
     const EXEMPTION_LIMIT = 20000;
