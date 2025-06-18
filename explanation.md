@@ -20,3 +20,9 @@
   - `(qtd_atual * média_atual) + (qtd_nova * preço_novo)) / (qtd_total)`
 
 - `processSell`: processa operação de venda. Calcula lucro/prejuízo e aplica regras de imposto.
+
+## Explicação do código: `src/index.ts`
+
+- `main`: função principal que lê o arquivo de entrada, chama o `calculateTaxes` e escreve o resultado no arquivo de saída. 
+  - @param inputFile: caminho do arquivo de entrada
+  - @param outputFile: caminho do arquivo de saída
