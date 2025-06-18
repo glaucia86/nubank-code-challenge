@@ -1,6 +1,3 @@
-Com certeza! Aqui está um **README.md** revisado, detalhado e alinhado ao desafio (execução e testes automatizados), além do exemplo de script `test-calculator.sh` pronto para facilitar a avaliação.
-
----
 
 # 💰 Ganho de Capital - Desafio de Código (CLI)
 
