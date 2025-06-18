@@ -39,58 +39,52 @@ function processBuy(
 }
 
 function processSell(
-  operation: Operation, 
-  portfolio: { shares: number; averagePrice: Decimal; accumulatedLoss: Decimal}): TaxResult {
-    const salePrice = new Decimal(operation['unit-cost']);
-    const saleQuantity = operation.quantity;
-    const saleValue = salePrice.times(saleQuantity);
-    const costBasis = portfolio.averagePrice.times(saleQuantity);
+  operation: Operation,
+  portfolio: { shares: number; averagePrice: Decimal; accumulatedLoss: Decimal }
+): TaxResult {
+  const salePrice = new Decimal(operation['unit-cost']);
+  const saleQuantity = operation.quantity;
+  const saleValue = salePrice.times(saleQuantity);
+  const costBasis = portfolio.averagePrice.times(saleQuantity);
 
-    portfolio.shares -= saleQuantity;
+  portfolio.shares -= saleQuantity;
+  if (portfolio.shares === 0) {
+    portfolio.averagePrice = new Decimal(0);
+  }
 
-    if (portfolio.shares === 0) {
-      portfolio.averagePrice = new Decimal(0);
+  const result = saleValue.minus(costBasis);
+
+  if (result.isNegative() || result.isZero()) {
+    portfolio.accumulatedLoss = portfolio.accumulatedLoss.plus(result.abs());
+    return { tax: 0 };
+  }
+
+  const EXEMPTION_LIMIT = 20000;
+  if (saleValue.lessThanOrEqualTo(EXEMPTION_LIMIT)) {
+    return { tax: 0 };
+  }
+
+  let netProfit = result;
+  if (portfolio.accumulatedLoss.greaterThan(0)) {
+    if (netProfit.greaterThanOrEqualTo(portfolio.accumulatedLoss)) {
+      netProfit = netProfit.minus(portfolio.accumulatedLoss);
+      portfolio.accumulatedLoss = new Decimal(0);
+    } else {
+      portfolio.accumulatedLoss = portfolio.accumulatedLoss.minus(netProfit);
+      netProfit = new Decimal(0);
     }
+  }
 
-    const result = saleValue.minus(costBasis);
+  if (netProfit.isZero()) {
+    return { tax: 0 };
+  }
 
-    if (result.isNegative() || result.isZero()) {
-      portfolio.accumulatedLoss = portfolio.accumulatedLoss.plus(result.abs());
-      return {
-        tax: 0
-      };
-    }
+  const TAX_RATE = 0.20;
+  const tax = netProfit.times(TAX_RATE);
 
-    let netProfit = result;
-    if(portfolio.accumulatedLoss.greaterThan(0)) {
-      if (netProfit.greaterThanOrEqualTo(portfolio.accumulatedLoss)) {
-        netProfit = netProfit.minus(portfolio.accumulatedLoss);
-        portfolio.accumulatedLoss = new Decimal(0);
-      } else {
-        portfolio.accumulatedLoss = portfolio.accumulatedLoss.minus(netProfit);
-        netProfit = new Decimal(0);
-      }
-    }
-
-    const EXEMPTION_LIMIT = 20000;
-    if (saleValue.lessThanOrEqualTo(EXEMPTION_LIMIT)) {
-      return {
-        tax: 0
-      };
-    }
-
-    if (netProfit.isZero()){
-      return {
-        tax: 0
-      };
-    }
-
-    const TAX_RATE = 0.20;
-    const tax = netProfit.times(TAX_RATE);
-
-    return { 
-      tax: Number(tax.toFixed(2))
-    }
+  return {
+    tax: Number(tax.toFixed(2))
+  };
 }
 
 export default calculateTaxes;
