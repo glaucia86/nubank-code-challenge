@@ -1,4 +1,4 @@
-import { TaxCalculationService } from "../calculator"
+import { TaxCalculationService } from "../services/tax-calculation.services";
 import { Operation } from "../types";
 
 describe('Tax Calculation Service Tests', () => {
@@ -41,22 +41,23 @@ describe('Tax Calculation Service Tests', () => {
   });
 
   describe('Melhorias de design', () => {
-   it('deve permitir injeção de portfolio para testes', () => {
-    const { Portfolio } = require('../domain/entities/portfolio');
-    const { Money } = require('../domain/value-objects/money');
+    it('deve permitir injeção de portfolio para testes', () => {
+      const { Portfolio } = require('../domain/entities/portfolio');
+      const { Money } = require('../domain/value-objects/money');
+      
+      const portfolio = new Portfolio();
+      portfolio.recordPurchase(2000, Money.fromNumber(15));
+      
 
-    const portfolio = new Portfolio();
-    portfolio.recordPurchase(1000, Money.fromNumber(15));
-
-    const serviceWithPortfolio = new TaxCalculationService(portfolio);
-
-    const operations: Operation[] = [
-      { operation: 'sell', 'unit-cost': 20.00, quantity: 500 }
-    ];
-
-    const results = serviceWithPortfolio.calculateTaxes(operations);
-
-    expect(results[0].tax).toBe(500); 
-   });
+      const serviceWithPortfolio = new TaxCalculationService(portfolio);
+      
+      const operations: Operation[] = [
+        { operation: 'sell', 'unit-cost': 20.00, quantity: 2000 }
+      ];
+      
+      const results = serviceWithPortfolio.calculateTaxes(operations);
+      
+      expect(results[0].tax).toBe(2000);
+    });
   });
 });
