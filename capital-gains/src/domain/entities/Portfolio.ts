@@ -17,6 +17,15 @@ export class Portfolio {
     return this.accumulatedLoss;
   }
 
+  recordPurchase(quantity: number, unitPrice: Money): void {
+    const currentTotalValue = this.averagePrice.multiply(this.shares);
+    const purchaseValue = unitPrice.multiply(quantity);
+    const newTotalShares = this.shares + quantity;
+
+    this.shares = newTotalShares;
+    this.averagePrice = currentTotalValue.add(purchaseValue).divide(newTotalShares);
+  }
+
   recordSale(quantity: number): void {
     if (quantity > this.shares) {
       throw new Error(`Cannot sell ${quantity} shares. Only ${this.shares} available.`);
