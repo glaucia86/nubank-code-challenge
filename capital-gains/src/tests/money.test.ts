@@ -9,7 +9,7 @@ describe('Money Value Object', () => {
 
     it('deve criar Money zero', () => {
       const zero = Money.zero();
-      expect(zero.toNumber()).toBe(true);
+      expect(zero.isZero()).toBe(true);
       expect(zero.toNumber()).toBe(0);
     });
   });
