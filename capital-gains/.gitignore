@@ -6,6 +6,7 @@ dist/
 
 # Test coverage
 coverage/
+coverage-baseline/
 
 # Logs
 *.log
