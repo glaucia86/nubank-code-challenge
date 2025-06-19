@@ -1,10 +1,10 @@
 import Decimal from "decimal.js";
 import { Operation, TaxResult } from "./types";
+import { Money } from "./domain/value-objects/Money";
 
-Decimal.set({precision: 20, rounding: Decimal.ROUND_HALF_UP });
+Decimal.set({ precision: 20, rounding: Decimal.ROUND_HALF_UP });
 
 export function calculateTaxes(operations: Operation[]): TaxResult[] {
-
   const portfolio = {
     shares: 0,
     averagePrice: new Decimal(0),
@@ -13,65 +13,61 @@ export function calculateTaxes(operations: Operation[]): TaxResult[] {
 
   return operations.map(operation => {
     if (operation.operation === 'buy') {
-      return processBuy(operation, portfolio);
+      return processBuyHybrid(operation, portfolio);
     } else {
-      return processSell(operation, portfolio);
+      return processSellHybrid(operation, portfolio);
     }
   });
-
 }
 
-function processBuy(
-  operation: Operation, 
-  portfolio: { shares: number; averagePrice: Decimal; accumulatedLoss: Decimal}): TaxResult {
-    const currentTotalValue = portfolio.averagePrice.times(portfolio.shares);
-    const newPurchaseValue = new Decimal(operation['unit-cost']).times(operation.quantity);
-    const newTotalShares = portfolio.shares + operation.quantity;
+function processBuyHybrid(operation: Operation, portfolio: { shares: number; averagePrice: Decimal; accumulatedLoss: Decimal; }): TaxResult {
+  const currentValue = Money.fromDecimal(portfolio.averagePrice).multiply(portfolio.shares);
+  const purchaseValue = Money.fromNumber(operation['unit-cost']).multiply(operation.quantity);
+  const newTotalShares = portfolio.shares + operation.quantity;
 
-    portfolio.shares = newTotalShares;
-    portfolio.averagePrice = currentTotalValue
-      .plus(newPurchaseValue)
-      .dividedBy(newTotalShares);
+  const newAverage = currentValue.add(purchaseValue).divide(newTotalShares);
 
-    return {
-      tax: 0
-    };
+  portfolio.shares = newTotalShares;
+  portfolio.averagePrice = newAverage.toDecimal();
+
+  return { tax: 0 };
 }
 
-function processSell(
-  operation: Operation,
-  portfolio: { shares: number; averagePrice: Decimal; accumulatedLoss: Decimal }
-): TaxResult {
-  const salePrice = new Decimal(operation['unit-cost']);
-  const saleQuantity = operation.quantity;
-  const saleValue = salePrice.times(saleQuantity);
-  const costBasis = portfolio.averagePrice.times(saleQuantity);
+function processSellHybrid(operation: Operation, portfolio: { shares: number; averagePrice: Decimal; accumulatedLoss: Decimal; }): TaxResult {
+  const salePrice = Money.fromNumber(operation['unit-cost']).multiply(operation.quantity);
+  const saleValue = salePrice.multiply(operation.quantity);
+  const costBasis = Money.fromDecimal(portfolio.averagePrice).multiply(operation.quantity);
 
-  portfolio.shares -= saleQuantity;
+  portfolio.shares -= operation.quantity;
   if (portfolio.shares === 0) {
     portfolio.averagePrice = new Decimal(0);
   }
 
-  const result = saleValue.minus(costBasis);
+  const result = saleValue.subtract(costBasis);
 
   if (result.isNegative() || result.isZero()) {
-    portfolio.accumulatedLoss = portfolio.accumulatedLoss.plus(result.abs());
+    const loss = Money.fromDecimal(portfolio.accumulatedLoss).add(result.abs());
+    portfolio.accumulatedLoss = loss.toDecimal();
+
     return { tax: 0 };
   }
 
   const EXEMPTION_LIMIT = 20000;
-  if (saleValue.lessThanOrEqualTo(EXEMPTION_LIMIT)) {
+  if (saleValue.isLessThanOrEqual(EXEMPTION_LIMIT)) {
     return { tax: 0 };
   }
 
   let netProfit = result;
-  if (portfolio.accumulatedLoss.greaterThan(0)) {
-    if (netProfit.greaterThanOrEqualTo(portfolio.accumulatedLoss)) {
-      netProfit = netProfit.minus(portfolio.accumulatedLoss);
+    const accumulatedLoss = Money.fromDecimal(portfolio.accumulatedLoss);
+
+  if (!accumulatedLoss.isZero()) {
+    if (netProfit.isGreaterThanOrEqual(accumulatedLoss)) {
+      netProfit = netProfit.subtract(accumulatedLoss);
       portfolio.accumulatedLoss = new Decimal(0);
     } else {
-      portfolio.accumulatedLoss = portfolio.accumulatedLoss.minus(netProfit);
-      netProfit = new Decimal(0);
+      const remainingLoss = accumulatedLoss.subtract(netProfit);
+      portfolio.accumulatedLoss = remainingLoss.toDecimal();
+      netProfit = Money.zero();
     }
   }
 
@@ -80,11 +76,10 @@ function processSell(
   }
 
   const TAX_RATE = 0.20;
-  const tax = netProfit.times(TAX_RATE);
+  const tax = netProfit.multiply(TAX_RATE);
 
-  return {
-    tax: Number(tax.toFixed(2))
-  };
+  return { tax: tax.toNumber() };
 }
 
 export default calculateTaxes;
+
