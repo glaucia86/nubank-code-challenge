@@ -34,7 +34,7 @@ function processBuyHybrid(operation: Operation, portfolio: { shares: number; ave
 }
 
 function processSellHybrid(operation: Operation, portfolio: { shares: number; averagePrice: Decimal; accumulatedLoss: Decimal; }): TaxResult {
-  const salePrice = Money.fromNumber(operation['unit-cost']).multiply(operation.quantity);
+  const salePrice = Money.fromNumber(operation['unit-cost']);
   const saleValue = salePrice.multiply(operation.quantity);
   const costBasis = Money.fromDecimal(portfolio.averagePrice).multiply(operation.quantity);
 
