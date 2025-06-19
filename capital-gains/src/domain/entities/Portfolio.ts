@@ -1,4 +1,4 @@
-import { Money } from "../value-objects/Money";
+import { Money } from "../value-objects/money";
 
 export class Portfolio {
   private shares: number = 0;

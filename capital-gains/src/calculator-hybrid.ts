@@ -1,6 +1,6 @@
 import Decimal from "decimal.js";
 import { Operation, TaxResult } from "./types";
-import { Money } from "./domain/value-objects/Money";
+import { Money } from "./domain/value-objects/money";
 
 Decimal.set({ precision: 20, rounding: Decimal.ROUND_HALF_UP });
 

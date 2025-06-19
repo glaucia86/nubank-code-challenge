@@ -1,5 +1,5 @@
 import Decimal from "decimal.js";
-import { Money } from "../value-objects/Money";
+import { Money } from "../value-objects/money";
 
 export class MoneyAdapter {
   static calculateWithMoney(
