@@ -3,7 +3,7 @@ import { join } from 'path';
 
 function runCLI(input: string): Promise<string> {
   return new Promise((resolve, reject) => {
-    const cliPath = join(__dirname, '..', 'dist', 'index.js');
+    const cliPath = join(__dirname, '..', '..', 'dist', 'index.js');
     const child = spawn('node', [cliPath], {
       stdio: ['pipe', 'pipe', 'pipe']
     });
