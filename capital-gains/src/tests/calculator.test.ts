@@ -1,9 +1,9 @@
 import { Operation } from '../types';
 import { calculateTaxes } from '../calculator';
 
-describe('calculateTaxes', () => {
-  describe('Basic Operations', () => {
-    it('should return 0 tax for buy operation', () => {
+describe('Calcular Impostos', () => {
+  describe('Operações Básicas', () => {
+    it('deve retornar 0 de imposto para operação de compra', () => {
       const operations: Operation[] = [
         { operation: 'buy', 'unit-cost': 10.00, quantity: 100 }
       ];
@@ -11,7 +11,7 @@ describe('calculateTaxes', () => {
       expect(calculateTaxes(operations)).toEqual([ { tax: 0 } ]);
     });
 
-    it('must calculate 20% tax on profit on sell operation', () => {
+    it('deve calcular 20% de imposto sobre o lucro na operação de venda', () => {
       const operations: Operation[] = [
         { operation: 'buy', 'unit-cost': 10.00, quantity: 10000 },
         { operation: 'sell', 'unit-cost': 20.00, quantity: 5000 }
@@ -21,7 +21,7 @@ describe('calculateTaxes', () => {
     });
   });
 
-  it('should return tax 0 for sell at a loss', () => {
+  it('deve retornar 0 de imposto para venda com prejuízo', () => {
     const operations: Operation[] = [
       { operation: 'buy', 'unit-cost': 10.00, quantity: 10000 },
       { operation: 'sell', 'unit-cost': 5.00, quantity: 5000 }
@@ -30,8 +30,8 @@ describe('calculateTaxes', () => {
     expect(calculateTaxes(operations)).toEqual([ { tax: 0 }, { tax: 0 } ]);
   });
 
-  describe('Exemption Rule (≤ R$ 20,000)must return 0 tax for sale at a loss', () => {
-    it('must exempt transactions with a total value ≤ R$ 20,000', () => {
+  describe('Regra de Isenção (≤ R$ 20.000)', () => {
+    it('deve isentar transações com valor total ≤ R$ 20.000', () => {
       const operations: Operation[] = [
         { operation: 'buy', 'unit-cost': 10.00, quantity: 100},
         { operation: 'sell', 'unit-cost': 15.00, quantity: 50},
@@ -40,7 +40,7 @@ describe('calculateTaxes', () => {
       expect(calculateTaxes(operations)).toEqual([ { tax: 0 }, { tax: 0 } ]);
     });
 
-    it('must charge tax on transactions > R$ 20,000', () => {
+    it('deve cobrar imposto sobre transações > R$ 20.000', () => {
       const operations: Operation[] = [
         { operation: 'buy', 'unit-cost': 10.00, quantity: 10000 },
         { operation: 'sell', 'unit-cost': 50.00, quantity: 10000 }
